@@ -6,11 +6,11 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 
-contract SimpleNFTv2 is ERC721Upgradeable, OwnableUpgradeable
+contract CysNFT is ERC721Upgradeable, OwnableUpgradeable
 {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
@@ -34,8 +34,8 @@ contract SimpleNFTv2 is ERC721Upgradeable, OwnableUpgradeable
         // require(msg.value == PRICE, "SimpleNFT: Not enough Ether.");
         _tokenIds.increment();
         _mint(msg.sender, _tokenIds.current());
-        require(IERC20(_TOKENCONTRACTADDRESS).balanceOf(msg.sender) >= mintPrice, "SimpleNFT: Not enough Ether.");
-        require(IERC20(_TOKENCONTRACTADDRESS).transferFrom(msg.sender,address(this), mintPrice),"SimpleNFT: Tranfer was unsuccessful");
+        require(IERC20Upgradeable(_TOKENCONTRACTADDRESS).balanceOf(msg.sender) >= mintPrice, "SimpleNFT: Not enough tokens.");
+        require(IERC20Upgradeable(_TOKENCONTRACTADDRESS).transferFrom(msg.sender,address(this), mintPrice),"SimpleNFT: Tranfer was unsuccessful");
     }
 
     function viewBalance() external view returns (uint256){
