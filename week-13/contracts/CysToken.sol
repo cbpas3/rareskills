@@ -29,5 +29,9 @@ contract CysToken is Initializable, ERC20CappedUpgradeable, OwnableUpgradeable{
         payable(owner()).transfer(address(this).balance);
     }
 
+    function mintToStakingContract(address stakingContractAddress, uint256 amount) external onlyOwner{
+        _mint(stakingContractAddress,amount);
+    }
+
 }
 

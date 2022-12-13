@@ -17,16 +17,18 @@ contract CysNFT is ERC721Upgradeable, OwnableUpgradeable
     CountersUpgradeable.Counter private _tokenIds;
 
 
-    address private _TOKENCONTRACTADDRESS;
+    address private _tokenContractAddress;
     uint256 public constant MAX_SUPPLY = 10;
     string public baseURI;
     uint256 public mintPrice;
 
-    function initialize(string memory _name, string memory _symbol, address _tokenContractAddress, uint256 _mintPrice) public initializer {
+    function initialize(string memory _name, string memory _symbol, address tokenContractAddress, uint256 _mintPrice, string memory _initialURI) public initializer {
         __ERC721_init(_name, _symbol);
         __Ownable_init();
-        _TOKENCONTRACTADDRESS = _tokenContractAddress;
+        _tokenContractAddress = tokenContractAddress;
         mintPrice = _mintPrice;
+        baseURI = _initialURI;
+
     }
 
     function mint() external payable {
@@ -34,13 +36,10 @@ contract CysNFT is ERC721Upgradeable, OwnableUpgradeable
         // require(msg.value == PRICE, "SimpleNFT: Not enough Ether.");
         _tokenIds.increment();
         _mint(msg.sender, _tokenIds.current());
-        require(IERC20Upgradeable(_TOKENCONTRACTADDRESS).balanceOf(msg.sender) >= mintPrice, "SimpleNFT: Not enough tokens.");
-        require(IERC20Upgradeable(_TOKENCONTRACTADDRESS).transferFrom(msg.sender,address(this), mintPrice),"SimpleNFT: Tranfer was unsuccessful");
+        require(IERC20Upgradeable(_tokenContractAddress).balanceOf(msg.sender) >= mintPrice, "SimpleNFT: Not enough tokens.");
+        require(IERC20Upgradeable(_tokenContractAddress).transferFrom(msg.sender,address(this), mintPrice),"SimpleNFT: Tranfer was unsuccessful");
     }
 
-    function viewBalance() external view returns (uint256){
-        return balanceOf(msg.sender);
-    }
 
     function withdraw() external onlyOwner {
         payable(msg.sender).transfer(address(this).balance);

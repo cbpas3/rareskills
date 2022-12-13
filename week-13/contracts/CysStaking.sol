@@ -14,11 +14,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 @notice Manual set up before use includes adding contract to setApproval for all
 @notice Manual set up also includes transferring the ERC20 tokens for contract's use
 */
-contract SimpleStaking is Initializable, IERC721ReceiverUpgradeable, OwnableUpgradeable {
+contract CysStaking is Initializable, IERC721ReceiverUpgradeable, OwnableUpgradeable {
 
-
-    address private constant _TOKEN_CONTRACT_ADDRESS = 0xd9145CCE52D386f254917e481eB44e9943F39138;
-    address private constant _NFT_CONTRACT_ADDRESS = 0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8;
+    address private _tokenContractAddress;
+    address private _nftContractAddress;
     uint256 constant STAKE_RATE = 10;
 
     struct Stake {
@@ -30,20 +29,25 @@ contract SimpleStaking is Initializable, IERC721ReceiverUpgradeable, OwnableUpgr
     mapping (uint256 => Stake) public stakes;
 
     /// Contructor
-    function initialize() public initializer{}
+    function initialize(address tokenContractAddress, address nftContractAddress) public initializer{
+        _tokenContractAddress = tokenContractAddress;
+        _nftContractAddress = nftContractAddress;
+    }
 
     function stake(uint256 tokenId) external {
         stakes[tokenId] = Stake(msg.sender, block.timestamp);
-        IERC721Upgradeable(_NFT_CONTRACT_ADDRESS).safeTransferFrom(msg.sender, address(this), tokenId);
+        IERC721Upgradeable(_nftContractAddress).safeTransferFrom(msg.sender, address(this), tokenId);
     }
 
     function unstake(uint256 tokenId) external {
         require(stakes[tokenId].owner == msg.sender);
         uint256 daysDiff = (block.timestamp - stakes[tokenId].timeStaked) / 60 / 60/ 24;
         uint256 amountOwed = STAKE_RATE * daysDiff;
-        require(IERC20Upgradeable(_TOKEN_CONTRACT_ADDRESS).transfer(msg.sender, amountOwed), "SimpleStaking: Token transfer was unsuccessful");
-        IERC721Upgradeable(_NFT_CONTRACT_ADDRESS).safeTransferFrom( address(this),msg.sender, tokenId);
+        require(IERC20Upgradeable(_tokenContractAddress).transfer(msg.sender, amountOwed), "SimpleStaking: Token transfer was unsuccessful");
+        IERC721Upgradeable(_nftContractAddress).safeTransferFrom( address(this),msg.sender, tokenId);
     }
+
+
 
     function onERC721Received(
     address operator,

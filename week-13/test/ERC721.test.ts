@@ -17,6 +17,7 @@ describe("NFT", function () {
   const INITIAL_ETH_BALANCE = ethers.utils.hexStripZeros(
     ethers.utils.parseEther("20000").toHexString()
   );
+  const BASE_URI = "https://mydomain.com/metadata/";
 
   this.beforeEach(async function () {
     accounts = await ethers.getSigners();
@@ -34,7 +35,7 @@ describe("NFT", function () {
 
     contract = await upgrades.deployProxy(
       ContractFactory,
-      [NAME, SYMBOL, tokenContract.address, MINT_PRICE_IN_WEI],
+      [NAME, SYMBOL, tokenContract.address, MINT_PRICE_IN_WEI, BASE_URI],
       {
         initializer: "initialize",
       }
@@ -66,6 +67,7 @@ describe("NFT", function () {
       //   ).to.be.equal(new BigNumber.from("50000000000000000"));
 
       await contract.connect(accounts[1]).mint();
+
       expect(await contract.balanceOf(accounts[1].address)).to.be.equal(1);
     });
   });
