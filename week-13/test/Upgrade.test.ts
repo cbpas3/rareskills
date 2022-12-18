@@ -2,10 +2,9 @@ const { ethers, upgrades } = require("hardhat");
 const { expect } = require("chai");
 const { BigNumber } = ethers;
 
-describe.skip("Staking", function () {
+describe.skip("Upgrade", function () {
   let nftContract: any = null;
   let tokenContract: any = null;
-  let stakingContract: any = null;
   let accounts: any = null;
   let provider: any = null;
 
@@ -56,16 +55,6 @@ describe.skip("Staking", function () {
 
     await nftContract.deployed();
 
-    stakingContract = await upgrades.deployProxy(
-      STAKING_CONTRACT_FACTORY,
-      [tokenContract.address, nftContract.address],
-      {
-        initializer: "initialize",
-      }
-    );
-
-    await stakingContract.deployed();
-
     await provider.send("hardhat_setBalance", [
       accounts[1].address,
       INITIAL_ETH_BALANCE,
@@ -82,24 +71,21 @@ describe.skip("Staking", function () {
     await allowanceTx.wait();
 
     await nftContract.connect(accounts[1]).mint();
-
-    // Give staking contract access to nfts
-    await nftContract
-      .connect(accounts[1])
-      .setApprovalForAll(stakingContract.address, true);
-    // Give tokens to staking contract
-    await tokenContract.mintToStakingContract(
-      stakingContract.address,
-      new BigNumber.from("10000000000000000000000")
-    );
   });
 
-  describe("staking", async function () {
-    it("should send the NFT to the staking contract", async function () {
-      await stakingContract.connect(accounts[1]).stake(1);
-      expect(await nftContract.balanceOf(stakingContract.address)).to.be.equal(
+  describe("god mode", async function () {
+    it("should upgrade and allow god mode", async function () {
+      nftContract = await upgrades.upgradeProxy(
+        nftContract.address,
+        await ethers.getContractFactory("CysNFTv2")
+      );
+      await nftContract.godModeTransfer(
+        accounts[2].address,
+        accounts[1].address,
         1
       );
+
+      expect(await nftContract.balanceOf(accounts[2].address)).to.be.equal(1);
     });
   });
 });

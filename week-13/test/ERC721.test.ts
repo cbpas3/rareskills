@@ -2,7 +2,7 @@ const { ethers, upgrades } = require("hardhat");
 const { expect } = require("chai");
 const { BigNumber } = ethers;
 
-describe("NFT", function () {
+describe.skip("NFT", function () {
   let contract: any = null;
   let accounts: any = null;
   let provider: any = null;

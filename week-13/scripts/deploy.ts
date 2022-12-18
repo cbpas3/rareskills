@@ -1,18 +1,45 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  let nftContract: any = null;
+  let tokenContract: any = null;
+  let accounts: any = null;
+  let provider: any = null;
 
-  const lockedAmount = ethers.utils.parseEther("1");
+  const TOKEN_NAME = "CysToken";
+  const TOKEN_SYMBOL = "CYT";
+  const TOKEN_CAP = 1000;
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  const NFT_NAME = "CysNFT";
+  const NFT_SYMBOL = "CNF";
+  const NFT_MINT_PRICE = 1;
+  const NFT_BASE_URI = "https://mydomain.com/metadata/";
 
-  await lock.deployed();
+  const TOKEN_CONTRACT_FACTORY = await ethers.getContractFactory("CysToken");
+  const NFT_CONTRACT_FACTORY = await ethers.getContractFactory("CysNFT");
 
-  console.log(`Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`);
+  tokenContract = await upgrades.deployProxy(
+    TOKEN_CONTRACT_FACTORY,
+    [TOKEN_NAME, TOKEN_SYMBOL, TOKEN_CAP],
+    { initializer: "initialize" }
+  );
+
+  await tokenContract.deployed();
+
+  nftContract = await upgrades.deployProxy(
+    NFT_CONTRACT_FACTORY,
+    [NFT_NAME, NFT_SYMBOL, tokenContract.address, NFT_MINT_PRICE, NFT_BASE_URI],
+    {
+      initializer: "initialize",
+    }
+  );
+
+  await nftContract.deployed();
+
+  nftContract = await upgrades.upgradeProxy(
+    nftContract.address,
+    await ethers.getContractFactory("CysNFTv2")
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

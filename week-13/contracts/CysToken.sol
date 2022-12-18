@@ -21,8 +21,8 @@ contract CysToken is Initializable, ERC20CappedUpgradeable, OwnableUpgradeable{
     }
 
     function mint() external payable {
-        require(msg.value == 1 ether, "CysToken: Wrong amount of Eth sent.");
-        _mint(msg.sender,1000*10**decimals());
+        require(msg.value == 1 wei, "CysToken: Wrong amount of Eth sent.");
+        _mint(msg.sender,1);
     }
 
     function withdrawEth() external payable onlyOwner {

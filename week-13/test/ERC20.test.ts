@@ -10,7 +10,7 @@ const easyMint = async (contract: any, account: any) => {
   return true;
 };
 
-describe("Token", function () {
+describe.skip("Token", function () {
   let contract: any = null;
   let accounts: any = null;
   let provider: any = null;
