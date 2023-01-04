@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.1;
+pragma solidity ^0.8.0;
 
 /******************************************************************************\
 * Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
@@ -13,19 +13,20 @@ import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 
 contract Diamond {    
 
-    constructor(
-        address _contractOwner,
-        address _diamondCutFacet,
-        address _diaomondLoupeFacet,
-        address _ownershipFacet
-    ) {
+    constructor(address _contractOwner, address _diamondCutFacet) payable {        
         LibDiamond.setContractOwner(_contractOwner);
-        LibDiamond.addDiamondFunctions(_diamondCutFacet, _diaomondLoupeFacet, _ownershipFacet);
-        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        ds.supportedInterfaces[0xd9b67a26] = true; //erc1155
+
+        // Add the diamondCut external function from the diamondCutFacet
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+        bytes4[] memory functionSelectors = new bytes4[](1);
+        functionSelectors[0] = IDiamondCut.diamondCut.selector;
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: _diamondCutFacet, 
+            action: IDiamondCut.FacetCutAction.Add, 
+            functionSelectors: functionSelectors
+        });
+        LibDiamond.diamondCut(cut, address(0), "");        
     }
-
-
 
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
@@ -37,7 +38,7 @@ contract Diamond {
             ds.slot := position
         }
         // get facet from function selector
-        address facet = ds.selectorToFacetAndPosition[msg.sig].facetAddress;
+        address facet = address(bytes20(ds.facets[msg.sig]));
         require(facet != address(0), "Diamond: Function does not exist");
         // Execute external function from facet using delegatecall and return any value.
         assembly {
