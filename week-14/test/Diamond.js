@@ -1,7 +1,5 @@
 /* global ethers */
 
-import { ethers } from "hardhat";
-
 const FacetCutAction = { Add: 0, Replace: 1, Remove: 2 };
 
 // get function selectors from ABI

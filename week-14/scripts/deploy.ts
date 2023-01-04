@@ -3,7 +3,7 @@
 
 import { ethers } from "hardhat";
 
-const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
+const { getSelectors, FacetCutAction } = require("../test/Diamond.js");
 
 async function deployDiamond() {
   const accounts = await ethers.getSigners();
