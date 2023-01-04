@@ -193,4 +193,37 @@ describe("Test", function () {
     const test1Facet = await ethers.getContractAt("Test1Facet", diamondAddress);
     await test1Facet.test1Func10();
   });
+
+  it("should add FacetA functions", async () => {
+    const FacetA = await ethers.getContractFactory("FacetA");
+    const facetAFacet = await FacetA.deploy();
+    await facetAFacet.deployed();
+    addresses.push(facetAFacet.address);
+    const selectors = getSelectors(facetAFacet);
+    tx = await diamondCutFacet.diamondCut(
+      [
+        {
+          facetAddress: facetAFacet.address,
+          action: FacetCutAction.Add,
+          functionSelectors: selectors,
+        },
+      ],
+      ethers.constants.AddressZero,
+      "0x",
+      { gasLimit: 800000 }
+    );
+    receipt = await tx.wait();
+    if (!receipt.status) {
+      throw Error(`Diamond upgrade failed: ${tx.hash}`);
+    }
+    result = await diamondLoupeFacet.facetFunctionSelectors(
+      facetAFacet.address
+    );
+    assert.sameMembers(result, selectors);
+  });
+
+  it("should test function call", async () => {
+    const facetAFacet = await ethers.getContractAt("FacetA", diamondAddress);
+    expect(await facetAFacet.sayHello()).to.be.equal("Hello");
+  });
 });
