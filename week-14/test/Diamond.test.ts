@@ -222,8 +222,48 @@ describe("Test", function () {
     assert.sameMembers(result, selectors);
   });
 
-  it("should test function call", async () => {
+  it("should test function call to FacetA", async () => {
     const facetAFacet = await ethers.getContractAt("FacetA", diamondAddress);
     expect(await facetAFacet.sayHello()).to.be.equal("Hello");
+  });
+
+  it("should test FacetA set data", async () => {
+    const facetAFacet = await ethers.getContractAt("FacetA", diamondAddress);
+    await facetAFacet.setDataA(
+      "0x0000000000000000000000000000000000000000000000000000000000000012"
+    );
+    expect(await facetAFacet.getDataA()).to.be.equal(
+      "0x0000000000000000000000000000000000000000000000000000000000000012"
+    );
+  });
+
+  it("should add ERC721Facet functions", async () => {
+    const ERC721ContractFactory = await ethers.getContractFactory(
+      "ERC721Facet"
+    );
+    const ERC721Facet = await ERC721ContractFactory.deploy();
+    await ERC721Facet.deployed();
+    addresses.push(ERC721Facet.address);
+    const selectors = getSelectors(ERC721Facet);
+    tx = await diamondCutFacet.diamondCut(
+      [
+        {
+          facetAddress: ERC721Facet.address,
+          action: FacetCutAction.Add,
+          functionSelectors: selectors,
+        },
+      ],
+      ethers.constants.AddressZero,
+      "0x",
+      { gasLimit: 800000 }
+    );
+    receipt = await tx.wait();
+    if (!receipt.status) {
+      throw Error(`Diamond upgrade failed: ${tx.hash}`);
+    }
+    result = await diamondLoupeFacet.facetFunctionSelectors(
+      ERC721Facet.address
+    );
+    assert.sameMembers(result, selectors);
   });
 });
