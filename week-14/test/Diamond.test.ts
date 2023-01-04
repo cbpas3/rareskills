@@ -8,6 +8,7 @@ import {
   DiamondCutFacet,
   DiamondLoupeFacet,
   OwnershipFacet,
+  ERC721Facet,
 } from "../typechain-types";
 
 import {
@@ -103,6 +104,7 @@ describe("Test", function () {
   let diamondCutFacet: DiamondCutFacet;
   let diamondLoupeFacet: DiamondLoupeFacet;
   let ownershipFacet: OwnershipFacet;
+  let erc721Facet: ERC721Facet;
   let tx;
   let receipt;
   let result;
@@ -241,14 +243,14 @@ describe("Test", function () {
     const ERC721ContractFactory = await ethers.getContractFactory(
       "ERC721Facet"
     );
-    const ERC721Facet = await ERC721ContractFactory.deploy();
-    await ERC721Facet.deployed();
-    addresses.push(ERC721Facet.address);
-    const selectors = getSelectors(ERC721Facet);
+    erc721Facet = await ERC721ContractFactory.deploy();
+    await erc721Facet.deployed();
+    addresses.push(erc721Facet.address);
+    const selectors = getSelectors(erc721Facet);
     tx = await diamondCutFacet.diamondCut(
       [
         {
-          facetAddress: ERC721Facet.address,
+          facetAddress: erc721Facet.address,
           action: FacetCutAction.Add,
           functionSelectors: selectors,
         },
@@ -262,8 +264,20 @@ describe("Test", function () {
       throw Error(`Diamond upgrade failed: ${tx.hash}`);
     }
     result = await diamondLoupeFacet.facetFunctionSelectors(
-      ERC721Facet.address
+      erc721Facet.address
     );
     assert.sameMembers(result, selectors);
+  });
+
+  it("should initialize ERC721 Facet", async () => {
+    expect(erc721Facet.initializer("CyFigures", "CF", 10)).to.be.ok;
+  });
+
+  it("should revert because initialize can only be called once", async () => {
+    await expect(erc721Facet.initializer("CyFigures", "CF", 10)).to.be.reverted;
+  });
+
+  it("should have a name", async () => {
+    expect(await erc721Facet.getTokenName()).to.be.equal("CyFigures");
   });
 });
