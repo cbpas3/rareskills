@@ -280,4 +280,8 @@ describe("Test", function () {
   it("should have a name", async () => {
     expect(await erc721Facet.getTokenName()).to.be.equal("CyFigures");
   });
+
+  xit("should support erc721 interface", async () => {
+    expect(await diamondLoupeFacet.supportsInterface("0x80ac58cd")).to.be.true;
+  });
 });

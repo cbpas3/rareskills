@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.1;
+import { LibDiamond } from  "../libraries/LibDiamond.sol";
 
 library ERC721Storage {
 
@@ -36,11 +37,13 @@ contract ERC721Facet {
     
     function initializer(string calldata _tokenName, string calldata _tokenSymbol, uint256 _maxAmountOfTokens) public {
         ERC721Storage.DiamondStorage storage ds = ERC721Storage.diamondStorage();
+        LibDiamond.DiamondStorage storage dsLD = LibDiamond.diamondStorage();
         require(ds.tokenInitialized == false);
         ds.tokenName = _tokenName;
         ds.tokenSymbol = _tokenSymbol;
         ds.maxAmountOfTokens = _maxAmountOfTokens;
         ds.tokenInitialized = true;
+        dsLD.supportedInterfaces[0x80ac58cd]= true;
     }
 
     function getTokenName() public view returns(string memory){
