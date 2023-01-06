@@ -57,6 +57,18 @@ function get(functionNames) {
   return selectors;
 }
 
+function get2(selectors, functionNames) {
+  const selectors2 = selectors.filter((v) => {
+    for (const functionName of functionNames) {
+      if (v === selectors.contract.interface.getSighash(functionName)) {
+        return true;
+      }
+    }
+    return false;
+  });
+  return selectors2;
+}
+
 // remove selectors using an array of signatures
 function removeSelectors(selectors, signatures) {
   const iface = new ethers.utils.Interface(
@@ -82,3 +94,4 @@ exports.FacetCutAction = FacetCutAction;
 exports.remove = remove;
 exports.removeSelectors = removeSelectors;
 exports.findAddressPositionInFacets = findAddressPositionInFacets;
+exports.get2 = get2;

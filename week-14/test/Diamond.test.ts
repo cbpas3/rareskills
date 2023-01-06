@@ -9,6 +9,8 @@ import {
   DiamondLoupeFacet,
   OwnershipFacet,
   ERC721Facet,
+  ERC721FacetV2,
+  CysToken,
 } from "../typechain-types";
 
 import {
@@ -16,6 +18,7 @@ import {
   FacetCutAction,
   removeSelectors,
   findAddressPositionInFacets,
+  get2,
 } from "./Diamond.js";
 
 const { deployDiamond } = require("../scripts/deploy.ts");
@@ -105,6 +108,8 @@ describe("Test", function () {
   let diamondLoupeFacet: DiamondLoupeFacet;
   let ownershipFacet: OwnershipFacet;
   let erc721Facet: ERC721Facet;
+  let erc721FacetV2: ERC721FacetV2;
+  let cysToken: CysToken;
   let tx;
   let receipt;
   let result;
@@ -270,18 +275,181 @@ describe("Test", function () {
   });
 
   it("should initialize ERC721 Facet", async () => {
-    expect(erc721Facet.initializer("CyFigures", "CF", 10)).to.be.ok;
+    const erc721FromDiamond = await ethers.getContractAt(
+      "ERC721Facet",
+      diamondAddress
+    );
+    expect(erc721FromDiamond.initializer("CyFigures", "CF", 10)).to.be.ok;
   });
 
   it("should revert because initialize can only be called once", async () => {
-    await expect(erc721Facet.initializer("CyFigures", "CF", 10)).to.be.reverted;
+    const erc721FromDiamond = await ethers.getContractAt(
+      "ERC721Facet",
+      diamondAddress
+    );
+    await expect(erc721FromDiamond.initializer("CyFigures", "CF", 10)).to.be
+      .reverted;
   });
 
   it("should have a name", async () => {
-    expect(await erc721Facet.getTokenName()).to.be.equal("CyFigures");
+    const erc721FromDiamond = await ethers.getContractAt(
+      "ERC721Facet",
+      diamondAddress
+    );
+    expect(await erc721FromDiamond.getTokenName()).to.be.equal("CyFigures");
   });
 
-  xit("should support erc721 interface", async () => {
+  it("should support erc721 interface", async () => {
     expect(await diamondLoupeFacet.supportsInterface("0x80ac58cd")).to.be.true;
+  });
+
+  it("should have a name", async () => {
+    const erc721FromDiamond = await ethers.getContractAt(
+      "ERC721Facet",
+      diamondAddress
+    );
+    expect(await erc721FromDiamond.getTokenName()).to.be.equal("CyFigures");
+  });
+
+  it("should mint", async () => {
+    const erc721FromDiamond = await ethers.getContractAt(
+      "ERC721Facet",
+      diamondAddress
+    );
+    await erc721FromDiamond.mint({ value: ethers.utils.parseEther("0.0001") });
+    const accounts = await ethers.getSigners();
+    expect(await erc721FromDiamond.balanceOf(accounts[0].address)).to.be.equal(
+      1
+    );
+  });
+
+  // it("should add supportsInterface function", async () => {
+  //   const ERC721v2 = await ethers.getContractFactory("ERC721FacetV2");
+  //   const selectors = get2(getSelectors(ERC721v2), [
+  //     "setCoinAddress(address)",
+  //   ]);
+  //   const testFacetAddress = addresses[3];
+  //   tx = await diamondCutFacet.diamondCut(
+  //     [
+  //       {
+  //         facetAddress: testFacetAddress,
+  //         action: FacetCutAction.Replace,
+  //         functionSelectors: selectors,
+  //       },
+  //     ],
+  //     ethers.constants.AddressZero,
+  //     "0x",
+  //     { gasLimit: 800000 }
+  //   );
+  //   receipt = await tx.wait();
+  //   if (!receipt.status) {
+  //     throw Error(`Diamond upgrade failed: ${tx.hash}`);
+  //   }
+  //   result = await diamondLoupeFacet.facetFunctionSelectors(testFacetAddress);
+  //   assert.sameMembers(result, getSelectors(Test1Facet));
+  // });
+
+  it("should deploy an ERC20 token", async () => {
+    const ERC20TokenFactory = await ethers.getContractFactory("CysToken");
+    cysToken = await ERC20TokenFactory.deploy();
+    await expect(cysToken.deployed()).to.be.ok;
+  });
+
+  it("should add setCoinAddress functions", async () => {
+    const ERC721V2ContractFactory = await ethers.getContractFactory(
+      "ERC721FacetV2"
+    );
+    erc721FacetV2 = await ERC721V2ContractFactory.deploy();
+    await erc721FacetV2.deployed();
+    addresses.push(erc721FacetV2.address);
+    const selectors = get2(getSelectors(erc721FacetV2), [
+      "setCoinAddress(address)",
+    ]);
+    tx = await diamondCutFacet.diamondCut(
+      [
+        {
+          facetAddress: erc721FacetV2.address,
+          action: FacetCutAction.Add,
+          functionSelectors: selectors,
+        },
+      ],
+      ethers.constants.AddressZero,
+      "0x",
+      { gasLimit: 800000 }
+    );
+    receipt = await tx.wait();
+    if (!receipt.status) {
+      throw Error(`Diamond upgrade failed: ${tx.hash}`);
+    }
+    result = await diamondLoupeFacet.facetFunctionSelectors(
+      erc721FacetV2.address
+    );
+    assert.sameMembers(result, selectors);
+  });
+
+  it("should set coin address", async () => {
+    const erc721V2 = await ethers.getContractAt(
+      "ERC721FacetV2",
+      diamondAddress
+    );
+    await expect(erc721V2.setCoinAddress(cysToken.address)).to.be.ok;
+  });
+
+  it("should replace the mint function", async () => {
+    const ERC721V2Factory = await ethers.getContractFactory("ERC721FacetV2");
+    const selectors = get2(getSelectors(ERC721V2Factory), ["mint()"]);
+    const testFacetAddress = erc721FacetV2.address;
+    tx = await diamondCutFacet.diamondCut(
+      [
+        {
+          facetAddress: testFacetAddress,
+          action: FacetCutAction.Replace,
+          functionSelectors: selectors,
+        },
+      ],
+      ethers.constants.AddressZero,
+      "0x",
+      { gasLimit: 800000 }
+    );
+    receipt = await tx.wait();
+    if (!receipt.status) {
+      throw Error(`Diamond upgrade failed: ${tx.hash}`);
+    }
+    result = await diamondLoupeFacet.facetFunctionSelectors(testFacetAddress);
+    assert.includeMembers(result, ["0x1249c58b"]);
+  });
+
+  it("should mint using the ERC20 tokens", async () => {
+    const erc721FromDiamond = await ethers.getContractAt(
+      "ERC721Facet",
+      diamondAddress
+    );
+    const accounts = await ethers.getSigners();
+    const mintTx = await cysToken.connect(accounts[1]).mint();
+    await mintTx.wait();
+
+    const allowanceTx = await cysToken
+      .connect(accounts[1])
+      .increaseAllowance(diamondAddress, ethers.utils.parseEther("0.05"));
+    await allowanceTx.wait();
+
+    await erc721FromDiamond.connect(accounts[1]).mint();
+    expect(await erc721FromDiamond.balanceOf(accounts[1].address)).to.be.equal(
+      1
+    );
+  });
+
+  it("should not mint because mint no longer takes ether", async () => {
+    const erc721FromDiamond = await ethers.getContractAt(
+      "ERC721Facet",
+      diamondAddress
+    );
+    const accounts = await ethers.getSigners();
+
+    await expect(
+      erc721FromDiamond
+        .connect(accounts[1])
+        .mint({ value: ethers.utils.parseEther("0.0001") })
+    ).to.be.reverted;
   });
 });

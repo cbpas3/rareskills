@@ -4,6 +4,7 @@ import { LibDiamond } from  "../libraries/LibDiamond.sol";
 import { IERC721Receiver } from "../interfaces/IERC721Receiver.sol";
 import "../libraries/Strings.sol";
 import "../libraries/Address.sol";
+import "../interfaces/IERC20.sol";
 
 library ERC721Storage {
 
@@ -18,6 +19,7 @@ library ERC721Storage {
         mapping(address => uint256) balances;
         mapping(uint256 => address) tokenApprovals;
         mapping(address => mapping(address => bool)) operatorApprovals;
+        address coinAddress;
     }
 
 
@@ -29,15 +31,7 @@ library ERC721Storage {
     }
 }
 
-contract ERC721Facet {
-    // function setDataA(bytes32 _dataA) external {
-    //     ERC721Storage.DiamondStorage storage ds = ERC721Storage.diamondStorage();
-        // ds.dataA = _dataA;
-    // }
-
-    // function getDataA() external view returns (bytes32) {
-    //     return ERC721Storage.diamondStorage().dataA;
-    // }
+contract ERC721FacetV2 {
     using Strings for uint256;
     using Address for address;
     
@@ -427,15 +421,21 @@ contract ERC721Facet {
             return true;
         }
     }
-
+    
     function mint() external payable {
         ERC721Storage.DiamondStorage storage ds = ERC721Storage.diamondStorage();
         require(ds.currentAmountOfTokens < ds.maxAmountOfTokens, "CyFigures: Supply limit reached.");
-        require(msg.value == 100000000000000 wei, "CyFigures: Not enough Ether.");
+        // require(msg.value == 100000000000000 wei, "CyFigures: Not enough Ether.");
         ds.currentAmountOfTokens += 1;
         _mint(msg.sender,ds.currentAmountOfTokens-1);
-        // require(IERC20Upgradeable(_tokenContractAddress).balanceOf(msg.sender) >= mintPrice, "SimpleNFT: Not enough tokens.");
-        // require(IERC20Upgradeable(_tokenContractAddress).transferFrom(msg.sender,address(this), mintPrice),"SimpleNFT: Tranfer was unsuccessful");
+        require(IERC20(ds.coinAddress).balanceOf(msg.sender) >= 1, "CyFigures: Not enough CyTokens.");
+        require(IERC20(ds.coinAddress).transferFrom(msg.sender,address(this), 1),"CyFigures: Transfer was unsuccessful");
+    }
+
+    function setCoinAddress(address _coinAddress) external {
+        LibDiamond.enforceIsContractOwner();
+        ERC721Storage.DiamondStorage storage ds = ERC721Storage.diamondStorage();
+        ds.coinAddress = _coinAddress;
     }
 
 
