@@ -32,19 +32,15 @@ contract IterableMappping{
 
     function deleteRecord(address addressToBeDeleted) external {
         require(isInserted[addressToBeDeleted], "Address not on record");
-        delete recordedAddresses[indices[addressToBeDeleted]];
-        //_resetPositionAfterDeletingRecord(indices[addressToBeDeleted]);
+        recordedAddresses[indices[addressToBeDeleted]] = recordedAddresses[recordedAddresses.length - 1];
+        recordedAddresses.pop();
+        delete isInserted[addressToBeDeleted];
+        delete indices[addressToBeDeleted];
+        delete records[addressToBeDeleted];
+        
     }
 
-    function _resetPositionAfterDeletingRecord(uint256 start) internal {
-        for (uint256 i = start; i < recordedAddresses.length; i ++){
-            if(i == recordedAddresses.length -1){
-                delete recordedAddresses[i];
-            } else{
-                recordedAddresses[i] = recordedAddresses[i+1];
-            }
-        }
-    }
+
 
     function getNumberOfRecords() external view returns(uint256){
         return recordedAddresses.length;
