@@ -2,13 +2,21 @@
 
 pragma solidity 0.8.7;
 
+/// @title An implementation of iterable mapping
+/// @notice Contract can allow devs to iterate through its records
+/// @dev Iterate through records by iterating through recordedAddresses array
 contract IterableMappping{
+    /// @notice One address is associated with one uint256
     mapping (address => uint256) records;
+    /// @notice To keep track if a given address is on record
     mapping (address => bool) isInserted;
+    /// @notice Keeps track of addresses in the mapping and allows iterability
     address[] recordedAddresses;
+    /// @notice Keeps track of each address' index in `recordAddresses`
     mapping (address => uint256) indices;
 
     function insert(address addressToBeInserted) external {
+        /// @notice if address given is already given then does nothing
         if(isInserted[addressToBeInserted]){
             return();
         }
