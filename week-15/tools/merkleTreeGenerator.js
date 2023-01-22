@@ -2,7 +2,7 @@
 
 const { ethers } = require("ethers");
 const { MerkleTree } = require("merkletreejs");
-const { keccak256 } = ethers.utils;
+const { keccak256, toUtf8Bytes } = ethers.utils;
 
 // 3. Creating a buffer since we bytes array
 const padBuffer = (addr) => {
@@ -11,7 +11,10 @@ const padBuffer = (addr) => {
 
 function getMerkleRoot(whitelisted) {
   // 4. Creating buffer from leaves (lowest points in tree)
-  const leaves = whitelisted.map((address) => padBuffer(address));
+  const leaves = whitelisted.map((address, index) =>
+    keccak256(toUtf8Bytes(address.concat(index.toString())))
+  );
+
   const tree = new MerkleTree(leaves, keccak256, { sort: true });
 
   // 5. Creating a merkleRoot that we'll inject into smart contract
@@ -20,10 +23,14 @@ function getMerkleRoot(whitelisted) {
   return merkleRoot;
 }
 
-function getMerkleProof(whitelisted, address) {
-  const leaves = whitelisted.map((address) => padBuffer(address));
+function getMerkleProof(whitelisted, address, index) {
+  const leaves = whitelisted.map((address, index) =>
+    keccak256(toUtf8Bytes(address.concat(index.toString())))
+  );
   const tree = new MerkleTree(leaves, keccak256, { sort: true });
-  const merkleProof = tree.getHexProof(padBuffer(whitelisted[0]));
+  const merkleProof = tree.getHexProof(
+    keccak256(toUtf8Bytes(address.concat(index.toString())))
+  );
   return merkleProof;
 }
 
