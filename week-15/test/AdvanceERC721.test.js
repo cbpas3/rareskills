@@ -317,4 +317,27 @@ describe("AdvanceERC721", function () {
       );
     });
   });
+
+  describe("multiTransfer function", async function () {
+    it("should mint and transfer 2 NFTs", async function () {
+      ERC721Contract.setState(2);
+
+      for (let mintNumber = 0; mintNumber <= 3; mintNumber++) {
+        let mintTx = await ERC721Contract.connect(buyer1).mint(
+          [],
+          ethers.utils.keccak256(ethers.constants.AddressZero),
+          0,
+          {
+            value: ethers.utils.parseEther("0.01"),
+          }
+        );
+        await mintTx.wait();
+      }
+
+      await ERC721Contract.connect(buyer1).multiTransfer([
+        [buyer1.address, buyer2.address, 1, []],
+        [buyer1.address, buyer2.address, 2, []],
+      ]);
+    });
+  });
 });

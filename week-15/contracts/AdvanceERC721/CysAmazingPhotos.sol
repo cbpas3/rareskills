@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "hardhat/console.sol";
 
 contract CysAmazingPhotos is Ownable, ERC721 {
     using Counters for Counters.Counter;
@@ -37,7 +38,7 @@ contract CysAmazingPhotos is Ownable, ERC721 {
     address from;
     address to; 
     uint256 tokenId;
-    bytes memory data;
+    bytes data;
   }
 
   mapping (address => Commit) public commits;
@@ -194,21 +195,26 @@ contract CysAmazingPhotos is Ownable, ERC721 {
     
     // Multi-transfer functions
 
-    function multiTransfer(TransferInput[] transfers) public {
-        bytes memory tranferBytecode;
+    function multiTransfer(TransferInput[] calldata transfers) public {
+
+        bytes memory transferBytecode;
         for(uint256 transferNumber = 0; transferNumber < transfers.length; transferNumber++){
-            transferBytecode = abi.encodeWithSelector(CysAmazingPhotos.safeTransferFrom.selector, transfers[transferNumber].from, transfers[transferNumber].to, transfers[transferNumber].tokenId, transfers[transferNumber].data);
+
+            transferBytecode = abi.encodeWithSignature("safeTransferFrom(address,address,uint256,bytes)", transfers[transferNumber].from, transfers[transferNumber].to, transfers[transferNumber].tokenId, transfers[transferNumber].data);
+            //console.logBytes(transferBytecode);
             (bool ok,) = address(this).delegatecall(transferBytecode);
             if (!ok) {
-                revert DelegatecallFailed();
+                revert("One transfer failed");
             }
         }
     } 
-    
-
-
-
-
-
 
 }
+
+// 0x
+// b88d4fde
+// 00000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8
+// 0000000000000000000000003c44cdddb6a900fa2b585dd299e03d12fa4293bc
+// 0000000000000000000000000000000000000000000000000000000000000000
+// 0000000000000000000000000000000000000000000000000000000000000080
+// 0000000000000000000000000000000000000000000000000000000000000000
