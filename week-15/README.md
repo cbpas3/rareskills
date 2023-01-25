@@ -1,13 +1,13 @@
-# Sample Hardhat Project
+# Week 15
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+## Misc. Advanced Patterns
 
-Try running some of the following tasks:
+### Vanity address
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+### State Machine
+
+### Merkle tree airdrop
+
+### Commit-reveal scheme
+
+### Multi delegate call
