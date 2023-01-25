@@ -64,7 +64,7 @@ contract CysAmazingPhotos is Ownable, ERC721 {
         require(getClaimStatus(index)==false, "CysAmazingPhotos: NFT already claimed.");
         _updateToClaimed(index);
         _numberOfNFTsMinted.increment();
-        _mint(msg.sender, _numberOfNFTsMinted.current());
+        _mint(msg.sender, _numberOfNFTsMinted.current()-1);
     }
 
     function mint(bytes32[] calldata merkleProof, bytes32 leafToVerify, uint index) external payable {
@@ -75,7 +75,7 @@ contract CysAmazingPhotos is Ownable, ERC721 {
         }
         else if (currentState == States.PUBLIC){
             _numberOfNFTsMinted.increment();
-            _mint(msg.sender, _numberOfNFTsMinted.current());
+            _mint(msg.sender, _numberOfNFTsMinted.current()-1);
             if(_numberOfNFTsMinted.current() == NUMBER_OF_NFTS){
                 //setState(States.SOLDOUT);
                 currentState = States.SOLDOUT;
@@ -210,11 +210,3 @@ contract CysAmazingPhotos is Ownable, ERC721 {
     } 
 
 }
-
-// 0x
-// b88d4fde
-// 00000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8
-// 0000000000000000000000003c44cdddb6a900fa2b585dd299e03d12fa4293bc
-// 0000000000000000000000000000000000000000000000000000000000000000
-// 0000000000000000000000000000000000000000000000000000000000000080
-// 0000000000000000000000000000000000000000000000000000000000000000
